@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Feasty — calorie & fitness tracker",
+  "version": "0.1.0",
+  "description": "track what you eat and how much you move. cozy + cute.",
+  "permissions": ["storage", "alarms", "notifications", "sidePanel"],
+  "host_permissions": ["http://localhost:3001/*", "https://*.feasty.app/*"],
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_title": "Feasty",
+    "default_icon": {
+      "16": "icons/feasty-16.png",
+      "32": "icons/feasty-32.png",
+      "48": "icons/feasty-48.png",
+      "128": "icons/feasty-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/feasty-16.png",
+    "32": "icons/feasty-32.png",
+    "48": "icons/feasty-48.png",
+    "128": "icons/feasty-128.png"
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.ts",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel/index.html"
+  },
+  "options_page": "src/options/index.html",
+  "chrome_url_overrides": {
+    "newtab": "src/newtab/index.html"
+  }
+}
