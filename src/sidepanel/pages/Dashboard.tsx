@@ -7,6 +7,8 @@ import { WaterTracker } from '@/components/dashboard-components/WaterTracker';
 import { StreakChip } from '@/components/dashboard-components/StreakChip';
 import { WeekChart } from '@/components/dashboard-components/WeekChart';
 import { Greeting } from '@/components/dashboard-components/Greeting';
+import { InsightCard } from '@/components/dashboard-components/InsightCard';
+import { WeightStrip } from '@/components/dashboard-components/WeightStrip';
 import { useProfile } from '@/context/ProfileContext';
 
 export const DashboardPage: React.FC = () => {
@@ -53,6 +55,8 @@ export const DashboardPage: React.FC = () => {
         fatTarget={goal.fatTarget}
       />
       <WeekChart data={week.map((w) => ({ date: w.date, kcal: w.intake.kcal, target: w.goal?.kcalTarget ?? goal.kcalTarget }))} />
+      <WeightStrip />
+      <InsightCard />
     </div>
   );
 };

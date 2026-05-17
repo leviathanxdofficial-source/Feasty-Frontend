@@ -12,3 +12,5 @@ export * from './recipe';
 export * from './reminder';
 export * from './badge';
 export * from './streak';
+export * from './note';
+export * from './insight';
