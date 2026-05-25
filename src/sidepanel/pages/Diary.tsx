@@ -3,6 +3,7 @@ import { logApi, type LogEntry } from '@/lib/api';
 import { ymd } from '@/lib/date';
 import { MealSection } from '@/components/diary-components/MealSection';
 import { DateNav } from '@/components/diary-components/DateNav';
+import { DateStrip } from '@/components/diary-components/DateStrip';
 import { Card } from '@/components/ui/card';
 
 const MEALS = [
@@ -31,6 +32,7 @@ export const DiaryPage: React.FC = () => {
   return (
     <div className="space-y-3">
       <DateNav date={date} onChange={setDate} />
+      <DateStrip date={date} onChange={setDate} />
       <Card className="flex items-center justify-between py-3">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-[var(--color-muted)]">today total</div>
