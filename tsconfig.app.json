@@ -18,7 +18,7 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": { "@/*": ["./src/*"] },
-    "types": ["chrome", "vite/client"]
+    "types": ["vite/client"]
   },
   "include": ["src", "vite.config.ts"]
 }
