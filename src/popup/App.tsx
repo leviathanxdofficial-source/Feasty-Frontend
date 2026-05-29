@@ -12,21 +12,11 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { FoodSearch } from '@/components/diary-components/FoodSearch';
 import { Select } from '@/components/ui/select';
 import { Plus, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-const openSidePanel = async () => {
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.windowId != null) {
-      await (chrome as any).sidePanel?.open?.({ windowId: tab.windowId });
-      window.close();
-    }
-  } catch {
-    /* noop */
-  }
-};
-
 export const App: React.FC = () => {
+  const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { me, goal } = useProfile();
   const [day, setDay] = React.useState<DaySummary | null>(null);
@@ -54,12 +44,12 @@ export const App: React.FC = () => {
   }, [user, load]);
 
   return (
-    <div style={{ width: 360, padding: 12 }}>
+    <div className="mx-auto max-w-md p-4">
       <AuthGate loading={loading} user={user}>
         <div className="space-y-3">
           <div className="flex items-start justify-between">
             <Greeting name={me?.user.displayName} />
-            <Button size="icon" variant="ghost" aria-label="open sidepanel" onClick={openSidePanel}>
+            <Button size="icon" variant="ghost" aria-label="open dashboard" onClick={() => navigate('/')}>
               <ExternalLink className="size-4" />
             </Button>
           </div>
