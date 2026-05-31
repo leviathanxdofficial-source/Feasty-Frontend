@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { foodApi, type Food } from '@/lib/api';
+import { foodApi, recipeApi, type Food } from '@/lib/api';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Pill } from '@/components/ui/badge';
@@ -8,12 +9,19 @@ type Props = {
   onPick: (food: Food, servings: number) => void;
 };
 
+const CATEGORIES = ['drink', 'fast food', 'snack', 'meal', 'dessert', 'fruit', 'other'] as const;
+
 export const FoodSearch: React.FC<Props> = ({ onPick }) => {
   const [q, setQ] = React.useState('');
   const [foods, setFoods] = React.useState<Food[]>([]);
   const [picked, setPicked] = React.useState<Food | null>(null);
   const [servings, setServings] = React.useState(1);
   const [favs, setFavs] = React.useState<Food[]>([]);
+  const [adding, setAdding] = React.useState(false);
+  const [newKcal, setNewKcal] = React.useState('');
+  const [newCategory, setNewCategory] = React.useState<typeof CATEGORIES[number]>('meal');
+  const [alsoRecipe, setAlsoRecipe] = React.useState(false);
+  const [creating, setCreating] = React.useState(false);
 
   React.useEffect(() => {
     foodApi.favorites().then(setFavs).catch(() => undefined);
@@ -107,7 +115,109 @@ export const FoodSearch: React.FC<Props> = ({ onPick }) => {
           </li>
         ))}
         {foods.length === 0 && q ? (
-          <li className="text-xs text-[var(--color-muted)] py-4 text-center">nothing found for &quot;{q}&quot;</li>
+          <li className="py-3">
+            {!adding ? (
+              <div className="text-center space-y-2">
+                <div className="text-xs text-[var(--color-muted)]">nothing found for &quot;{q}&quot;</div>
+                <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>
+                  + add &quot;{q}&quot; as a custom food
+                </Button>
+              </div>
+            ) : (
+              <form
+                className="space-y-2 rounded-xl border border-[var(--color-line)] p-3"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const kcal = Number(newKcal);
+                  if (!q.trim() || !Number.isFinite(kcal) || kcal <= 0) return;
+                  setCreating(true);
+                  try {
+                    const created = await foodApi.create({
+                      name: q.trim(),
+                      servingSize: 1,
+                      servingUnit: 'serving',
+                      kcal,
+                      protein: 0,
+                      carbs: 0,
+                      fat: 0,
+                      tags: [newCategory],
+                    });
+                    if (alsoRecipe) {
+                      try {
+                        await recipeApi.create({
+                          name: q.trim(),
+                          servings: 1,
+                          ingredients: [{
+                            foodId: created._id,
+                            name: created.name,
+                            servings: 1,
+                            unit: created.servingUnit,
+                            kcal: created.kcal,
+                            protein: created.protein,
+                            carbs: created.carbs,
+                            fat: created.fat,
+                          }],
+                          steps: [],
+                        });
+                        toast.success('saved to recipes');
+                      } catch {
+                        toast.error('food saved, but recipe failed');
+                      }
+                    }
+                    setPicked(created);
+                    setAdding(false);
+                    setNewKcal('');
+                    setAlsoRecipe(false);
+                  } finally {
+                    setCreating(false);
+                  }
+                }}
+              >
+                <div className="text-xs font-semibold">add custom food</div>
+                <div className="text-xs text-[var(--color-muted)]">name: {q}</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs w-16">kcal</span>
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    step={1}
+                    placeholder="e.g. 250"
+                    value={newKcal}
+                    onChange={(e) => setNewKcal(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs w-16">category</span>
+                  <select
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value as typeof CATEGORIES[number])}
+                    className="flex h-9 w-full rounded-md border border-[var(--color-line)] bg-transparent px-2 text-sm"
+                  >
+                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <label className="flex items-center gap-2 text-xs cursor-pointer pt-1">
+                  <input
+                    type="checkbox"
+                    checked={alsoRecipe}
+                    onChange={(e) => setAlsoRecipe(e.target.checked)}
+                    className="h-3.5 w-3.5 accent-[var(--color-brand)]"
+                  />
+                  <span>also save as a recipe</span>
+                </label>
+                <div className="flex gap-2 pt-1">
+                  <Button type="button" variant="ghost" onClick={() => setAdding(false)} disabled={creating}>
+                    cancel
+                  </Button>
+                  <Button type="submit" className="flex-1" disabled={creating || !newKcal}>
+                    {creating ? 'adding...' : 'add & log'}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </li>
         ) : null}
       </ul>
     </div>
