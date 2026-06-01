@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
 
+const EXERCISE_CATEGORIES = ['walking', 'running', 'cycling', 'swimming', 'weightlifting', 'yoga', 'sports', 'hiit', 'other'] as const;
+
 export const ExerciseLogger: React.FC<{ date: string; onDone: () => void }> = ({ date, onDone }) => {
   const [q, setQ] = React.useState('');
   const [results, setResults] = React.useState<ExerciseCatalog[]>([]);
@@ -15,6 +17,10 @@ export const ExerciseLogger: React.FC<{ date: string; onDone: () => void }> = ({
   const [intensity, setIntensity] = React.useState<'low' | 'medium' | 'high'>('medium');
   const [sets, setSets] = React.useState<{ reps: number; weightKg: number }[]>([{ reps: 10, weightKg: 20 }]);
   const [loading, setLoading] = React.useState(false);
+  const [adding, setAdding] = React.useState(false);
+  const [newType, setNewType] = React.useState<'cardio' | 'strength'>('cardio');
+  const [newCategory, setNewCategory] = React.useState<typeof EXERCISE_CATEGORIES[number]>('walking');
+  const [creating, setCreating] = React.useState(false);
 
   React.useEffect(() => {
     const id = setTimeout(async () => {
@@ -72,6 +78,72 @@ export const ExerciseLogger: React.FC<{ date: string; onDone: () => void }> = ({
               </button>
             </li>
           ))}
+          {results.length === 0 && q ? (
+            <li className="py-3">
+              {!adding ? (
+                <div className="text-center space-y-2">
+                  <div className="text-xs text-[var(--color-muted)]">nothing found for &quot;{q}&quot;</div>
+                  <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>
+                    + add &quot;{q}&quot; as a custom exercise
+                  </Button>
+                </div>
+              ) : (
+                <form
+                  className="space-y-2 rounded-xl border border-[var(--color-line)] p-3"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!q.trim()) return;
+                    setCreating(true);
+                    try {
+                      const created = await exerciseApi.addCatalog({
+                        name: q.trim(),
+                        type: newType,
+                        category: newCategory,
+                      });
+                      setPicked(created);
+                      setAdding(false);
+                    } catch (err: any) {
+                      toast.error(err?.response?.data?.message ?? 'couldnt add');
+                    } finally {
+                      setCreating(false);
+                    }
+                  }}
+                >
+                  <div className="text-xs font-semibold">add custom exercise</div>
+                  <div className="text-xs text-[var(--color-muted)]">name: {q}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs w-16">type</span>
+                    <Select
+                      value={newType}
+                      onChange={(v) => setNewType(v as 'cardio' | 'strength')}
+                      options={[
+                        { value: 'cardio', label: 'cardio' },
+                        { value: 'strength', label: 'strength' },
+                      ]}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs w-16">category</span>
+                    <select
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value as typeof EXERCISE_CATEGORIES[number])}
+                      className="flex h-9 w-full rounded-md border border-[var(--color-line)] bg-transparent px-2 text-sm"
+                    >
+                      {EXERCISE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <Button type="button" variant="ghost" onClick={() => setAdding(false)} disabled={creating}>
+                      cancel
+                    </Button>
+                    <Button type="submit" className="flex-1" disabled={creating}>
+                      {creating ? 'adding...' : 'add & log'}
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </li>
+          ) : null}
         </ul>
       </div>
     );
